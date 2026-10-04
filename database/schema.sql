@@ -5,12 +5,12 @@ USE `Inventory`;
 CREATE TABLE IF NOT EXISTS `Owner`(
     `id` INT, 
     `name` VARCHAR(120),
-    PRIMARY KEY (`id`),
+    PRIMARY KEY (`id`)
 );
 
 CREATE TABLE IF NOT EXISTS `Location`(
     `name` VARCHAR(120),
-    PRIMARY KEY (`name`),
+    PRIMARY KEY (`name`)
 );
 
 CREATE TABLE IF NOT EXISTS `Items`(
