@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `Items`(
     `History` TEXT,
     `owner_id` INT,
     `location` VARCHAR(120),
-    PRIMARY KEY (`id`, `name`),
+    PRIMARY KEY (`id`),
     FOREIGN KEY (`owner_id`) REFERENCES `Owner`(`id`),
     FOREIGN KEY (`location`) REFERENCES `Location`(`name`)
 );
