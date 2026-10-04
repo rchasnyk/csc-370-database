@@ -21,6 +21,6 @@ CREATE TABLE IF NOT EXISTS `Items`(
     `owner_id` INT DEFAULT NULL,
     `location` VARCHAR(120) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    FOREIGN KEY (`owner_id`) REFERENCES `Owner`(`id`),
-    FOREIGN KEY (`location`) REFERENCES `Location`(`name`)
+    FOREIGN KEY (`owner_id`) REFERENCES `Owners`(`id`),
+    FOREIGN KEY (`location`) REFERENCES `Locations`(`name`)
 );
