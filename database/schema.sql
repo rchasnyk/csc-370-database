@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `Items`(
     `Name` VARCHAR(120) NOT NULL,
     `IsAvailable` BOOLEAN NOT NULL DEFAULT TRUE,
     `DateAcquired` DATE DEFAULT NULL,
+    `Supplier` VARCHAR(120) DEFAULT NULL,
     `Owner_id` INT DEFAULT NULL,
     `Room_number` INT DEFAULT NULL,
     `Building_ID` INT DEFAULT NULL, 
