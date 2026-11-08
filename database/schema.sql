@@ -104,10 +104,10 @@ CREATE TABLE IF NOT EXISTS `ItemHistory`(
 
     CONSTRAINT CheckHistoryDates
         CHECK (
-            `DateSignedOut` IS NULL
+            `DateSignedIn` IS NULL
             OR (
-                `DateSignedIn` IS NOT NULL
-                AND `DateSignedOut` >= `DateSignedIn` #swapped signedin and signedout so someone cant sign out an item until its been signed in
+                `DateSignedOut` IS NOT NULL
+                AND `DateSignedIn` >= `DateSignedOut`
             ) 
         ),
 
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `ItemHistory`(
 DELIMITER $
 # Trigger: Check if owner has requried access level.
 # Insert if yes, do nothing if no.
-CREATE TRIGGER IF NOT EXISTS CheckItemAccess
+CREATE TRIGGER IF NOT EXISTS CheckItemAccessInsert
 BEFORE INSERT ON Items
 FOR EACH ROW
 BEGIN
@@ -239,6 +239,50 @@ BEGIN
     THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Changing this group''s access level would remove an owner''s required access level for an item they own.';
+    END IF;
+END$
+
+# Trigger: Set item availability when an ItemHistory is inserted
+
+CREATE TRIGGER IF NOT EXISTS UpdateItemAvailabileOnInsert
+AFTER INSERT ON ItemHistory
+FOR EACH ROW
+BEGIN
+    IF NEW.DateSignedOut IS NOT NULL
+       OR NEW.DateSignedIn IS NOT NULL THEN
+
+        UPDATE Items
+        SET IsAvailable = NOT EXISTS (
+            SELECT 1
+            FROM ItemHistory
+            WHERE Item_id = NEW.Item_id
+              AND DateSignedOut IS NOT NULL
+              AND DateSignedIn IS NULL
+        )
+        WHERE ID = NEW.Item_id;
+
+    END IF;
+END$
+
+# Trigger: Calculate availability again whenever any ItemHistory entry is updated
+
+CREATE TRIGGER IF NOT EXISTS UpdateItemAvailableOnUpdate
+AFTER UPDATE ON ItemHistory
+FOR EACH ROW
+BEGIN
+    IF NOT (OLD.DateSignedOut <=> NEW.DateSignedOut)
+       OR NOT (OLD.DateSignedIn <=> NEW.DateSignedIn) THEN
+
+        UPDATE Items
+        SET IsAvailable = NOT EXISTS (
+            SELECT 1
+            FROM ItemHistory
+            WHERE Item_id = NEW.Item_id
+              AND DateSignedOut IS NOT NULL
+              AND DateSignedIn IS NULL
+        )
+        WHERE ID = NEW.Item_id;
+
     END IF;
 END$
 
