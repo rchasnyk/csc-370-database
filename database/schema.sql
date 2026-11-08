@@ -242,6 +242,34 @@ BEGIN
     END IF;
 END$
 
+# Trigger: Prevent removing an owner from a group if their remaining access level would be below the requirement of any item they own.
+CREATE TRIGGER IF NOT EXISTS CheckOwnerGroupRemoval
+BEFORE DELETE ON OwnerGroups
+FOR EACH ROW
+BEGIN
+    IF (
+        # Highest rank from the owners OTHER groups
+        SELECT COALESCE(MAX(a.`Rank`), 0)
+        FROM OwnerGroups og
+        JOIN `Group` g ON og.Group_ID = g.ID
+        JOIN AccessLevel a ON g.AccessLevel_ID = a.ID
+        WHERE og.Owner_ID = OLD.Owner_ID
+          AND og.Group_ID <> OLD.Group_ID
+    )
+    <
+    (
+        # Highest rank required by any item the owner holds
+        SELECT COALESCE(MAX(a.`Rank`), 0)
+        FROM Items i
+        JOIN AccessLevel a ON i.RequiredAccessLevel = a.ID
+        WHERE i.Owner_ID = OLD.Owner_ID
+    )
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Removing owner from this group would mean they own an item that requires a higher access level than they would have left.';
+    END IF;
+END$
+
 # Trigger: Set item availability when an ItemHistory is inserted
 
 CREATE TRIGGER IF NOT EXISTS UpdateItemAvailabileOnInsert
